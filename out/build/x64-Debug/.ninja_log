@@ -1,0 +1,4 @@
+# ninja log v5
+2	2072	7486851001856562	CMakeFiles/cuda.dir/kernal.cu.obj	3ed94ac227f3ba88
+2074	3325	7486851014412634	CMakeFiles/cuda.dir/cmake_device_link.obj	48f8aef4a0d4f47a
+3325	3546	7486851016534610	cuda.exe	27ae067bf3215ed5
