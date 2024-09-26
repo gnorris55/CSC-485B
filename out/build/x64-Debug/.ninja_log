@@ -1,6 +1,0 @@
-# ninja log v5
-14	5047	7490133183031621	CMakeFiles/cuda.dir/src/cpu_baseline.cu.obj	4505651c49937ce
-27	5050	7490133183031621	CMakeFiles/cuda.dir/src/gpu_solution.cu.obj	fdc2a1b881124bad
-2	5051	7490133183181985	CMakeFiles/cuda.dir/src/main.cu.obj	9891a38ab16f885d
-5051	8657	7490133219299920	CMakeFiles/cuda.dir/cmake_device_link.obj	d37519d2b1e3713a
-8657	9436	7490133226905094	cuda.exe	98e7dfbef03d22b

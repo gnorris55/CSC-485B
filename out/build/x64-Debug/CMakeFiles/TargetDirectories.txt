@@ -1,3 +1,0 @@
-C:/School/CSC485b/assignments/CSC-485B/out/build/x64-Debug/CMakeFiles/cuda.dir
-C:/School/CSC485b/assignments/CSC-485B/out/build/x64-Debug/CMakeFiles/edit_cache.dir
-C:/School/CSC485b/assignments/CSC-485B/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir
