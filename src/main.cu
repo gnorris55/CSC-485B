@@ -7,10 +7,10 @@
 #include <iostream> // std::cout, std::endl
 #include <vector>
 
-#include "algorithm_choices.h"
-#include "data_generator.h"
-#include "data_types.h"
-#include "cuda_common.h"
+#include <algorithm_choices.h>
+#include <data_generator.h>
+#include <data_types.h>
+#include <cuda_common.h>
 
 int main()
 {
