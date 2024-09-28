@@ -2,6 +2,10 @@
 
 #include <chrono>    // for timing
 #include <iostream>  // std::cout, std::endl
+#include <stdio.h>
+#include <vector>
+#include <iostream>
+#include <cmath>
 
 #include "cuda_common.h"
 
