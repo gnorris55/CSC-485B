@@ -1,4 +1,4 @@
 out/
 .vs/
-demo/.vs
-demo/out
+demo/*/.vs
+demo/*/out

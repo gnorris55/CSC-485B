@@ -8,13 +8,75 @@
 template <typename T>
 void print_vector(std::vector<T> vec);
 
+
+template<typename T>
+__device__
+void swap(unsigned int i, unsigned int j, T* input) {
+	// i = thread_id
+	// j = paired_thread_id
+	T temp_num = input[i];
+	input[i] = input[j];
+	input[j] = temp_num;
+}
+
+
+
+// not working correctly
 template <typename T>
-__global__
-void bitanic_sort(T* output, T* input, int n) {
+__device__
+void handle_step_one(unsigned const int thread_id, T* output, T* input, int n) {
+
+	if ((thread_id + 1) % 6 == 0) {
+
+		if (input[thread_id] > input[thread_id - 2]) {
+			swap(thread_id, (thread_id - 2), input);
+		}
+
+		if (input[thread_id] > input[thread_id - 1]) {
+			swap(thread_id, (thread_id - 1), input);
+		}
+	} else if ((thread_id + 1) % 3 == 0) {
+
+		if (input[thread_id] < input[thread_id - 2]) {
+			swap(thread_id, (thread_id - 2), input);
+		}
+		
+		if (input[thread_id] < input[thread_id - 1]) {
+			swap(thread_id, (thread_id - 1), input);
+		}
+	}
+
+}
+
+
+
+template <typename T>
+__device__
+void three_bitanic_sort(unsigned const int thread_id, T* output, T* input, int n) {
+
+
+	//demo
+	for (int step = 0; step < n; step += 3) {
+
+		for (int sub_step = step; sub_step >= 0; sub_step -= 3) {
+			if (step == 0) {
+				handle_step_one(thread_id, output, input, n);
+			}
+		}
+	}
+
+
+	output[thread_id] = input[thread_id];
+}
+
+
+template <typename T>
+__device__
+void binary_bitanic_sort(unsigned const int thread_id, T* output, T* input, int n) {
 	
 	//const int num_steps = log2(n);
 
-	const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+	//const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 	int bit_shift = 0;
 
 
@@ -36,28 +98,45 @@ void bitanic_sort(T* output, T* input, int n) {
 
 				// if the thread should be sorted in ascending order and it is less than its pair thread
 				if (input[thread_id] < input[paired_thread_id] && (order_bit == 0b01 || order_bit == 0b00)) {
-
-					T temp_num = input[thread_id];
-					input[thread_id] = input[paired_thread_id];
-					input[paired_thread_id] = temp_num;
+					swap(thread_id, paired_thread_id, input);
 				}
 				// if the thread should be sorted in descending order and it is greater than its pair thread
 				else if (input[thread_id] > input[paired_thread_id] && (order_bit == 0b11 || order_bit == 0b10)) {
+					swap(thread_id, paired_thread_id, input);
 
-					T temp_num = input[thread_id];
-					input[thread_id] = input[paired_thread_id];
-					input[paired_thread_id] = temp_num;
 				}
 			}
 
 		}
 	}
-		//__syncthreads();
 
 	output[thread_id] = input[thread_id];
 
 }
 
+
+template <typename T>
+__global__
+void new_bitanic_sort(T* output, T* input, int n) {
+	
+	const int num_steps = log2f(n);
+
+	const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+	const unsigned int bit_shift = 0b11;
+
+	unsigned int bit_order = (thread_id & (bit_shift << (num_steps - 2))) >> (num_steps - 2);
+
+	if (bit_order == 0b11) {
+		binary_bitanic_sort(thread_id, output, input, n / 4);
+	}
+	else {
+		three_bitanic_sort(thread_id, output, input, n / 3);
+	}
+	output[thread_id] = input[thread_id];
+
+
+
+}
 
 
 
@@ -68,9 +147,22 @@ void bitanic_sort_host() {
 	// figure out how to use blocks
 	std::vector<int> input;
 	
-	for (int i = 32; i > 0; i--)
-		input.push_back(i);
+	//for (int i = 24; i > 0; i--)
+	//	input.push_back(i);
+	
+	//for (int i = 0; i < 8; i++)
+	//	input.push_back(i);
 
+
+	input = {
+		88, 67, 64, 2, 82,
+		58, 10, 81, 79, 81,
+		23, 64, 23, 90, 91,
+		15, 8, 93, 78, 8,
+		10, 71, 96, 53, 4,
+		53, 61, 18, 72, 72,
+		38, 26
+	};
 	
 	std::cout << "pre" << std::endl;
 	print_vector(input);
@@ -86,7 +178,7 @@ void bitanic_sort_host() {
 	cudaMemcpy(d_input, input.data(), sizeof(int) * input.size(), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_output, output.data(), sizeof(int) * output.size(), cudaMemcpyHostToDevice);
 
-	bitanic_sort << <1, input.size() >> > (d_output, d_input, input.size());
+	new_bitanic_sort << <1, input.size() >> > (d_output, d_input, input.size());
 
 	cudaMemcpy(output.data(), d_output, sizeof(int) * input.size(), cudaMemcpyDeviceToHost);
 	std::cout << "post" << std::endl;
@@ -101,8 +193,6 @@ void print_vector(std::vector<T> vec) {
 		std::cout << vec[i] << ", ";
 
 	std::cout <<vec[vec.size() - 1] << "]" << std::endl;
-
-
 }
 
 int main() {
