@@ -78,6 +78,7 @@ void binary_bitanic_sort(unsigned const int thread_id, T* input, int n) {
 
                 }
             }
+            __syncthreads();
 
         }
     }
@@ -97,11 +98,15 @@ void opposing_sort( element_t * data, std::size_t invert_at_pos, std::size_t num
 
     unsigned int bit_order = (thread_id & (bit_shift << (num_steps - 2))) >> (num_steps - 2);
 
+    //data[thread_id] = thread_id;
+
+    
     binary_bitanic_sort(thread_id, data, num_elements);
 
     if (bit_order == 0b11) {
         binary_bitanic_sort(thread_id, data, num_elements / 4);
     }
+    
 }
 
 /**
