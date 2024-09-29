@@ -14,7 +14,7 @@
 
 int main()
 {
-    std::size_t const n = 4;
+    std::size_t const n = 32;
     std::size_t const switch_at = 3 * ( n >> 2 ) ;
 
     auto data = csc485b::a1::generate_uniform< element_t >( n );

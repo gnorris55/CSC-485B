@@ -32,18 +32,75 @@ void warm_the_gpu( element_t * data, std::size_t invert_at_pos, std::size_t num_
     }
 }
 
+template<typename T>
+__device__
+void swap(unsigned int i, unsigned int j, T* input) {
+    // i = thread_id
+    // j = paired_thread_id
+    T temp_num = input[i];
+    input[i] = input[j];
+    input[j] = temp_num;
+}
+
+template <typename T>
+__device__
+void binary_bitanic_sort(unsigned const int thread_id, T* input, int n) {
+
+    //const int num_steps = log2(n);
+
+    //const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+    int bit_shift = 0;
+
+
+    // the steps to progressively sort the array
+    for (int step = 1; step < n; step = step << 1) {
+
+        // creates a bit mask that will determine if a thread should be sorted in ascending or descending order
+        // if the result of the bit mask is 0 or 1, it should be sorted in ascending order
+        // if the result of the bit mask is 2 or 3, it should be sorted in descending order
+        int order_bit = (thread_id & (0b11 << bit_shift)) >> bit_shift;
+        bit_shift += 1;
+
+        // sorts within the steps
+        for (int sub_step = step; sub_step > 0; sub_step = sub_step >> 1) {
+
+            int paired_thread_id = thread_id ^ sub_step;
+
+            if (thread_id > paired_thread_id) {
+
+                // if the thread should be sorted in ascending order and it is less than its pair thread
+                if (input[thread_id] < input[paired_thread_id] && (order_bit == 0b01 || order_bit == 0b00)) {
+                    swap(thread_id, paired_thread_id, input);
+                }
+                // if the thread should be sorted in descending order and it is greater than its pair thread
+                else if (input[thread_id] > input[paired_thread_id] && (order_bit == 0b11 || order_bit == 0b10)) {
+                    swap(thread_id, paired_thread_id, input);
+
+                }
+            }
+
+        }
+    }
+
+    
+}
 /**
  * Your solution. Should match the CPU output.
  */
 __global__
 void opposing_sort( element_t * data, std::size_t invert_at_pos, std::size_t num_elements )
 {
-    int const th_id = blockIdx.x * blockDim.x + threadIdx.x;
+    const int num_steps = log2f(num_elements);
 
-    if( th_id < num_elements )
-    {
-        // IMPLEMENT ME!
-        return;
+    const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int bit_shift = 0b11;
+
+    unsigned int bit_order = (thread_id & (bit_shift << (num_steps - 2))) >> (num_steps - 2);
+
+    binary_bitanic_sort(thread_id, data, num_elements);
+
+    if (bit_order == 0b11) {
+        binary_bitanic_sort(thread_id, data, num_elements / 4);
     }
 }
 
