@@ -126,11 +126,10 @@ void new_bitanic_sort(T* output, T* input, int n) {
 
 	unsigned int bit_order = (thread_id & (bit_shift << (num_steps - 2))) >> (num_steps - 2);
 
+	binary_bitanic_sort(thread_id, output, input, n);
+
 	if (bit_order == 0b11) {
 		binary_bitanic_sort(thread_id, output, input, n / 4);
-	}
-	else {
-		three_bitanic_sort(thread_id, output, input, n / 3);
 	}
 	output[thread_id] = input[thread_id];
 
@@ -158,10 +157,10 @@ void bitanic_sort_host() {
 		88, 67, 64, 2, 82,
 		58, 10, 81, 79, 81,
 		23, 64, 23, 90, 91,
-		15, 8, 93, 78, 8,
+		15 /* 8, 93, 78, 8,
 		10, 71, 96, 53, 4,
 		53, 61, 18, 72, 72,
-		38, 26
+		38, 26*/
 	};
 	
 	std::cout << "pre" << std::endl;
