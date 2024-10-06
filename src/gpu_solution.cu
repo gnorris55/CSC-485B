@@ -50,6 +50,7 @@ void binary_bitanic_sort(unsigned const int thread_id, T* input, int n) {
 
     //const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     int bit_shift = 0;
+    //int real_size = pow(2, std::ceil(log2f(n)));
 
 
     // the steps to progressively sort the array
@@ -60,6 +61,7 @@ void binary_bitanic_sort(unsigned const int thread_id, T* input, int n) {
         // if the result of the bit mask is 2 or 3, it should be sorted in descending order
         int order_bit = (thread_id & (0b11 << bit_shift)) >> bit_shift;
         bit_shift += 1;
+
 
         // sorts within the steps
         for (int sub_step = step; sub_step > 0; sub_step = sub_step >> 1) {
@@ -85,6 +87,7 @@ void binary_bitanic_sort(unsigned const int thread_id, T* input, int n) {
 
     
 }
+
 /**
  * Your solution. Should match the CPU output.
  */
@@ -98,13 +101,10 @@ void opposing_sort( element_t * data, std::size_t invert_at_pos, std::size_t num
 
     unsigned int bit_order = (thread_id & (bit_shift << (num_steps - 2))) >> (num_steps - 2);
 
-    //data[thread_id] = thread_id;
-
-    
     binary_bitanic_sort(thread_id, data, num_elements);
 
-    if (bit_order == 0b11) {
-        binary_bitanic_sort(thread_id, data, num_elements / 4);
+    if (thread_id >= invert_at_pos) {
+        binary_bitanic_sort(thread_id, data, num_elements - invert_at_pos);
     }
     
 }

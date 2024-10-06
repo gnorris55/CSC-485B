@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include <limits>
 
 template <typename T>
 void print_vector(std::vector<T> vec);
@@ -49,6 +50,7 @@ void bitanic_sort(T* output, T* input, int n) {
 					input[paired_thread_id] = temp_num;
 				}
 			}
+			__syncthreads();
 
 		}
 	}
@@ -68,9 +70,24 @@ void bitanic_sort_host() {
 	// figure out how to use blocks
 	std::vector<int> input;
 	
-	//for (int i = 32; i > 0; i--)
-		//input.push_back(i);
+	for (int i = 16; i > 0; i--)
+		input.push_back(i);
 
+	/*
+	int n = input.size();
+
+	if (n > 0 && (n & (n - 1)) == 0)
+		std::cout << "size is right\n";
+	else {
+		std::cout << "size is not right\n";
+		int right_n = pow(2, std::ceil(log2(n)));
+		std::cout << "correct size is: " << right_n << std::endl;
+		std::cout << std::numeric_limits<int>::max() << std::endl;
+		for (int i = input.size() - 1; i < right_n; i++)
+			input.push_back(std::numeric_limits<int>::max());
+	}
+	*/
+	/*
 	input = {
 		88, 67, 64, 2, 82,
 		58, 10, 81, 79, 81,
@@ -80,7 +97,7 @@ void bitanic_sort_host() {
 		53, 61, 18, 72, 72,
 		38, 26
 	};
-	
+	*/
 	std::cout << "pre" << std::endl;
 	print_vector(input);
 
@@ -95,7 +112,7 @@ void bitanic_sort_host() {
 	cudaMemcpy(d_input, input.data(), sizeof(int) * input.size(), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_output, output.data(), sizeof(int) * output.size(), cudaMemcpyHostToDevice);
 
-	bitanic_sort << <1, input.size() >> > (d_output, d_input, input.size());
+	bitanic_sort << <2, input.size() / 2 >> > (d_output, d_input, input.size());
 
 	cudaMemcpy(output.data(), d_output, sizeof(int) * input.size(), cudaMemcpyDeviceToHost);
 	std::cout << "post" << std::endl;
