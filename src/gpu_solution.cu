@@ -35,8 +35,6 @@ void warm_the_gpu( element_t * data, std::size_t invert_at_pos, std::size_t num_
 template<typename T>
 __device__
 void swap(unsigned int i, unsigned int j, T* input) {
-    // i = thread_id
-    // j = paired_thread_id
     T temp_num = input[i];
     input[i] = input[j];
     input[j] = temp_num;
@@ -44,13 +42,10 @@ void swap(unsigned int i, unsigned int j, T* input) {
 
 template <typename T>
 __device__
-void binary_bitanic_sort(unsigned const int thread_id, T* input, int n) {
+void binary_bitonic_sort(unsigned const int thread_id, T* input, int n) {
 
-    //const int num_steps = log2(n);
 
-    //const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     int bit_shift = 0;
-    //int real_size = pow(2, std::ceil(log2f(n)));
 
 
     // the steps to progressively sort the array
@@ -94,17 +89,12 @@ void binary_bitanic_sort(unsigned const int thread_id, T* input, int n) {
 __global__
 void opposing_sort( element_t * data, std::size_t invert_at_pos, std::size_t num_elements )
 {
-    const int num_steps = log2f(num_elements);
-
     const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-    const unsigned int bit_shift = 0b11;
 
-    unsigned int bit_order = (thread_id & (bit_shift << (num_steps - 2))) >> (num_steps - 2);
-
-    binary_bitanic_sort(thread_id, data, num_elements);
-
+    binary_bitonic_sort(thread_id, data, num_elements);
+    
     if (thread_id >= invert_at_pos) {
-        binary_bitanic_sort(thread_id, data, num_elements - invert_at_pos);
+        binary_bitonic_sort(thread_id, data, num_elements - invert_at_pos);
     }
     
 }
