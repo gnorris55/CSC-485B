@@ -91,12 +91,26 @@ void opposing_sort( element_t * data, std::size_t invert_at_pos, std::size_t num
 {
     const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 
-    binary_bitonic_sort(thread_id, data, num_elements);
-    
-    if (thread_id >= invert_at_pos) {
-        binary_bitonic_sort(thread_id, data, num_elements - invert_at_pos);
+    if (num_elements > 1024) {
+        extern __shared__ element_t smem[];
+        smem[thread_id] = data[thread_id];
+
+        __syncthreads();
+        binary_bitonic_sort(thread_id, smem, num_elements);
+        
+        if (thread_id >= invert_at_pos) {
+            binary_bitonic_sort(thread_id, smem, num_elements - invert_at_pos);
+        }
+        __syncthreads();
+        data[thread_id] = smem[thread_id];
     }
-    
+    else {
+        binary_bitonic_sort(thread_id, data, num_elements);
+        
+        if (thread_id >= invert_at_pos) {
+            binary_bitonic_sort(thread_id, data, num_elements - invert_at_pos);
+        }
+    }
 }
 
 /**
@@ -126,7 +140,7 @@ void run_gpu_soln( std::vector< element_t > data, std::size_t switch_at, std::si
 
     // Time the execution of the kernel that you implemented
     auto const kernel_start = std::chrono::high_resolution_clock::now();
-    opposing_sort<<< num_blocks, threads_per_block>>>( d_data, switch_at, n );
+    opposing_sort<<< num_blocks, threads_per_block, n*sizeof(element_t) >>>(d_data, switch_at, n);
     auto const kernel_end = std::chrono::high_resolution_clock::now();
     CHECK_ERROR("Executing kernel on device");
 
