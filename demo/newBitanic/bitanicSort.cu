@@ -132,9 +132,6 @@ void new_bitanic_sort(T* output, T* input, int n) {
 		binary_bitanic_sort(thread_id, output, input, n / 4);
 	}
 	output[thread_id] = input[thread_id];
-
-
-
 }
 
 
@@ -145,22 +142,15 @@ void bitanic_sort_host() {
 
 	// figure out how to use blocks
 	std::vector<int> input;
-	
-	//for (int i = 24; i > 0; i--)
-	//	input.push_back(i);
-	
-	//for (int i = 0; i < 8; i++)
-	//	input.push_back(i);
-
 
 	input = {
 		88, 67, 64, 2, 82,
 		58, 10, 81, 79, 81,
 		23, 64, 23, 90, 91,
-		15 /* 8, 93, 78, 8,
+		15, 8, 93, 78, 8,
 		10, 71, 96, 53, 4,
 		53, 61, 18, 72, 72,
-		38, 26*/
+		38, 26
 	};
 	
 	std::cout << "pre" << std::endl;
