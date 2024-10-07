@@ -35,8 +35,6 @@ void warm_the_gpu( element_t * data, std::size_t invert_at_pos, std::size_t num_
 template<typename T>
 __device__
 void swap(unsigned int i, unsigned int j, T* input) {
-    // i = thread_id
-    // j = paired_thread_id
     T temp_num = input[i];
     input[i] = input[j];
     input[j] = temp_num;
@@ -44,13 +42,10 @@ void swap(unsigned int i, unsigned int j, T* input) {
 
 template <typename T>
 __device__
-void binary_bitanic_sort(unsigned const int thread_id, T* input, int n) {
+void binary_bitonic_sort(unsigned const int thread_id, T* input, int n) {
 
-    //const int num_steps = log2(n);
 
-    //const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     int bit_shift = 0;
-    //int real_size = pow(2, std::ceil(log2f(n)));
 
 
     // the steps to progressively sort the array
@@ -94,19 +89,27 @@ void binary_bitanic_sort(unsigned const int thread_id, T* input, int n) {
 __global__
 void opposing_sort( element_t * data, std::size_t invert_at_pos, std::size_t num_elements )
 {
-    const int num_steps = log2f(num_elements);
-
     const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-    const unsigned int bit_shift = 0b11;
+    
+    // GLOBAL IMPLEMENTATION
+    binary_bitonic_sort(thread_id, data, num_elements);
+    if (thread_id >= invert_at_pos) {
+        binary_bitonic_sort(thread_id, data, num_elements - invert_at_pos); //Global memory
+    }
+    /*
+    // SHARED IMPLEMENTATION
+    extern __shared__ element_t smem[];
+    smem[thread_id] = data[thread_id];
+    __syncthreads();
 
-    unsigned int bit_order = (thread_id & (bit_shift << (num_steps - 2))) >> (num_steps - 2);
-
-    binary_bitanic_sort(thread_id, data, num_elements);
+    binary_bitonic_sort(thread_id, smem, num_elements); 
 
     if (thread_id >= invert_at_pos) {
-        binary_bitanic_sort(thread_id, data, num_elements - invert_at_pos);
+        binary_bitonic_sort(thread_id, smem, num_elements - invert_at_pos);
     }
-    
+    __syncthreads();
+    data[thread_id] = smem[thread_id];
+    */
 }
 
 /**
@@ -136,7 +139,7 @@ void run_gpu_soln( std::vector< element_t > data, std::size_t switch_at, std::si
 
     // Time the execution of the kernel that you implemented
     auto const kernel_start = std::chrono::high_resolution_clock::now();
-    opposing_sort<<< num_blocks, threads_per_block>>>( d_data, switch_at, n );
+    opposing_sort<<< num_blocks, threads_per_block, threads_per_block*sizeof(element_t) >>>(d_data, switch_at, n);
     auto const kernel_end = std::chrono::high_resolution_clock::now();
     CHECK_ERROR("Executing kernel on device");
 
