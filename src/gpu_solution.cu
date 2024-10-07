@@ -90,19 +90,25 @@ __global__
 void opposing_sort( element_t * data, std::size_t invert_at_pos, std::size_t num_elements )
 {
     const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-    extern __shared__ element_t smem[]; //Need for shared memory
-    smem[thread_id] = data[thread_id]; //Need for shared memory
+    /*
+    // GLOBAL IMPLEMENTATION
+    binary_bitonic_sort(thread_id, data, num_elements);
+    if (thread_id >= invert_at_pos) {
+        binary_bitonic_sort(thread_id, data, num_elements - invert_at_pos); //Global memory
+    }*/
 
-    __syncthreads(); //Need for shared memory
-    //binary_bitonic_sort(thread_id, data, num_elements); //Global memory
-    binary_bitonic_sort(thread_id, smem, num_elements); //Shared memory
+    // SHARED IMPLEMENTATION
+    extern __shared__ element_t smem[];
+    smem[thread_id] = data[thread_id];
+    __syncthreads();
+
+    binary_bitonic_sort(thread_id, smem, num_elements); 
 
     if (thread_id >= invert_at_pos) {
-        //binary_bitonic_sort(thread_id, data, num_elements - invert_at_pos); //Global memory
-        binary_bitonic_sort(thread_id, smem, num_elements - invert_at_pos); //Shared memory
+        binary_bitonic_sort(thread_id, smem, num_elements - invert_at_pos);
     }
-    __syncthreads(); //Need for shared memory
-    data[thread_id] = smem[thread_id]; //Need for shared memory
+    __syncthreads();
+    data[thread_id] = smem[thread_id];
 }
 
 /**
